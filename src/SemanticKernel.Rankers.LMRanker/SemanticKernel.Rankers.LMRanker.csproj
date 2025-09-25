@@ -7,12 +7,14 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.SemanticKernel" Version="1.64.0" />
-    <PackageReference Include="Microsoft.SemanticKernel.Abstractions" Version="1.64.0" />
+    <PackageReference Include="Microsoft.SemanticKernel" Version="1.65.0" />
+    <PackageReference Include="Microsoft.SemanticKernel.Abstractions" Version="1.65.0" />
     <PackageReference Include="System.Text.Json" Version="8.0.6" />
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.SemanticKernel.Connectors.AzureOpenAI" Version="1.65.0" />
+    <PackageReference Include="Microsoft.SemanticKernel.Connectors.OpenAI" Version="1.65.0" />
     <ProjectReference Include="..\SemanticKernel.Rankers.Abstractions\SemanticKernel.Rankers.Abstractions.csproj" />
   </ItemGroup>
 
