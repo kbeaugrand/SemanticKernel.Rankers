@@ -11,7 +11,7 @@
     <PackageReference Include="Catalyst.Models.English" Version="1.0.30952" />
     <PackageReference Include="Microsoft.SemanticKernel.Connectors.AzureOpenAI" Version="1.65.0" />
     <PackageReference Include="Microsoft.SemanticKernel.Core" Version="1.65.0" />
-    <PackageReference Include="System.Numerics.Tensors" Version="9.0.8" />
+    <PackageReference Include="System.Numerics.Tensors" Version="9.0.9" />
   </ItemGroup>
 
   <ItemGroup>

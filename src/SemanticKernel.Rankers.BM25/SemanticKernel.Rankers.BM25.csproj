@@ -34,7 +34,7 @@
     <PackageReference Include="Catalyst.Models.French" Version="1.0.30952" />
     <PackageReference Include="Catalyst.Models.German" Version="1.0.30952" />
     <PackageReference Include="Microsoft.SemanticKernel.Abstractions" Version="1.65.0" />
-    <PackageReference Include="System.Numerics.Tensors" Version="9.0.8" />
+    <PackageReference Include="System.Numerics.Tensors" Version="9.0.9" />
   </ItemGroup>
 
   <ItemGroup>
