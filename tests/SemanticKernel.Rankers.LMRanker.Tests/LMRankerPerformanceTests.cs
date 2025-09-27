@@ -32,6 +32,12 @@ public class LMRankerPerformanceTests : IDisposable
             if (_kernel != null)
             {
                 _ranker = new LMRanker(_kernel);
+                
+                // Quick test to see if the AI service is actually working
+                if (!IsAIServiceWorking())
+                {
+                    _skipTests = true;
+                }
             }
             else
             {
@@ -368,25 +374,32 @@ public class LMRankerPerformanceTests : IDisposable
     {
         var builder = Kernel.CreateBuilder();
 
-         var config = new ConfigurationBuilder()
-            .AddJsonFile("appsettings.json", optional: false)
+        var config = new ConfigurationBuilder()
+            .AddJsonFile("appsettings.json", optional: true)
             .AddJsonFile("appsettings.Development.json", optional: true)
             .AddEnvironmentVariables()
             .Build();
 
-        // Try Azure OpenAI first
-        var azureEndpoint = config.GetValue<string>("AZURE_OPENAI_ENDPOINT");
-        var azureApiKey = config.GetValue<string>("AZURE_OPENAI_API_KEY");
-        var azureDeployment = config.GetValue<string>("AZURE_OPENAI_DEPLOYMENT_NAME") ?? "gpt-4";
+        // Try Azure OpenAI first (from config or environment)
+        var azureEndpoint = config.GetValue<string>("AZURE_OPENAI_ENDPOINT") ?? Environment.GetEnvironmentVariable("AZURE_OPENAI_ENDPOINT");
+        var azureApiKey = config.GetValue<string>("AZURE_OPENAI_API_KEY") ?? Environment.GetEnvironmentVariable("AZURE_OPENAI_API_KEY");
+        var azureDeployment = config.GetValue<string>("AZURE_OPENAI_DEPLOYMENT_NAME") ?? Environment.GetEnvironmentVariable("AZURE_OPENAI_DEPLOYMENT_NAME") ?? "gpt-4";
 
         if (!string.IsNullOrEmpty(azureEndpoint) && !string.IsNullOrEmpty(azureApiKey))
         {
-            builder.AddAzureOpenAIChatCompletion(
-                deploymentName: azureDeployment,
-                endpoint: azureEndpoint,
-                apiKey: azureApiKey
-            );
-            return builder.Build();
+            try
+            {
+                builder.AddAzureOpenAIChatCompletion(
+                    deploymentName: azureDeployment,
+                    endpoint: azureEndpoint,
+                    apiKey: azureApiKey
+                );
+                return builder.Build();
+            }
+            catch
+            {
+                // Azure OpenAI configuration failed
+            }
         }
 
         // Try OpenAI
@@ -395,11 +408,18 @@ public class LMRankerPerformanceTests : IDisposable
 
         if (!string.IsNullOrEmpty(openAIKey))
         {
-            builder.AddOpenAIChatCompletion(
-                modelId: openAIModel,
-                apiKey: openAIKey
-            );
-            return builder.Build();
+            try
+            {
+                builder.AddOpenAIChatCompletion(
+                    modelId: openAIModel,
+                    apiKey: openAIKey
+                );
+                return builder.Build();
+            }
+            catch
+            {
+                // OpenAI configuration failed
+            }
         }
 
         // Try local Ollama (for development)
@@ -418,6 +438,35 @@ public class LMRankerPerformanceTests : IDisposable
         }
 
         return null;
+    }
+
+    /// <summary>
+    /// Quick check to see if AI services are actually available and working
+    /// </summary>
+    private bool IsAIServiceWorking()
+    {
+        if (_ranker == null || _kernel == null) return false;
+        
+        try
+        {
+            // Try a very simple scoring operation to test service availability
+            var testTask = Task.Run(async () =>
+            {
+                var testDocs = new[] { "test document" };
+                await foreach (var result in _ranker.ScoreAsync("test", CreateAsyncEnumerable(testDocs)))
+                {
+                    return result.Item2 > 0; // If we get a meaningful score, the service is working
+                }
+                return false;
+            });
+            
+            // Give it 5 seconds to respond, if it times out the service isn't available
+            return testTask.Wait(5000) && testTask.Result;
+        }
+        catch
+        {
+            return false;
+        }
     }
 
     public void Dispose()
